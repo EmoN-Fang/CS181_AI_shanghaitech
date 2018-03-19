@@ -88,7 +88,6 @@ def depthFirstSearch(problem):
     """
     "*** YOUR CODE HERE ***"
 
-    
     util.raiseNotDefined()
 
 def breadthFirstSearch(problem):
