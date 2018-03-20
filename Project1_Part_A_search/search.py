@@ -211,9 +211,6 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                 tmp_cost += heuristic(child_state, problem)
                 fringe.push(new_item, tmp_cost)
 
-    util.raiseNotDefined()
-
-
 # Abbreviations
 bfs = breadthFirstSearch
 dfs = depthFirstSearch
