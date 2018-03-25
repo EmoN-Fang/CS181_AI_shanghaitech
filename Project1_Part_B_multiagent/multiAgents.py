@@ -167,7 +167,44 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
+        return self.alphabeta(0, 0, gameState, float('-infinity'), float('infinity'))
 
+
+    def alphabeta(self, agent, depth, state, alpha, beta):
+        if agent == state.getNumAgents():
+            agent = 0
+            depth = depth + 1
+            return self.alphabeta(agent, depth, state, alpha, beta)
+        if (depth == self.depth) or (state.getLegalActions(agent) == 0) or state.isWin() or state.isLose():
+            return self.evaluationFunction(state)
+
+        legal_action = state.getLegalActions(agent)
+        if agent == 0:
+            tmp_score = float('-infinity')
+            for action in legal_action:
+                child_state = state.generateSuccessor(agent, action)
+                score = self.alphabeta(agent+1, depth, child_state, alpha, beta)
+                if score > tmp_score:
+                    tmp_score = score
+                    tmp_action = action
+                if tmp_score > beta:
+                    return tmp_score
+                alpha = max(alpha, tmp_score)
+            if depth == 0:
+                return tmp_action
+            else:
+                return tmp_score
+        else:
+            tmp_score = float('infinity')
+            for action in legal_action:
+                child_state = state.generateSuccessor(agent, action)
+                score = self.alphabeta(agent+1, depth, child_state, alpha, beta)
+                if score < tmp_score:
+                    tmp_score = score
+                if tmp_score < alpha:
+                    return tmp_score
+                beta = min(beta, tmp_score)
+            return tmp_score
 
 
 
@@ -187,8 +224,29 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           All ghosts should be modeled as choosing uniformly at random from their
           legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        legalMoves = gameState.getLegalActions(0)
+        scores = [self.expmax(1, 0, gameState.generateSuccessor(0, action)) for action in legalMoves]
+        bestScore = max(scores)
+        bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
+        chosenIndex = random.choice(bestIndices)
+
+        return legalMoves[chosenIndex]
+
+    def expmax(self, agent, depth, state):
+        if agent == state.getNumAgents():
+            agent = 0
+            depth = depth + 1
+            return self.expmax(agent, depth, state)
+        if (depth == self.depth) or (state.getLegalActions(agent) == 0) or state.isWin() or state.isLose():
+            return self.evaluationFunction(state)
+
+        legal_action = state.getLegalActions(agent)
+        if agent == 0:
+            return max(self.expmax(agent + 1, depth, state.generateSuccessor(agent, action)) for action in legal_action)
+        else:
+            return sum(self.expmax(agent + 1, depth, state.generateSuccessor(agent, action)) for action in legal_action)/len(legal_action)
+
 
 def betterEvaluationFunction(currentGameState):
     """
