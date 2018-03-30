@@ -150,9 +150,7 @@ def atLeastOne(literals) :
     >>> print logic.pl_true(atleast1,model2)
     True
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-
+    return logic.disjoin(literals)
 
 def atMostOne(literals) :
     """
@@ -160,8 +158,15 @@ def atMostOne(literals) :
     CNF (conjunctive normal form) that represents the logic that at most one of 
     the expressions in the list is true.
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    final_literals = []
+    non_literals = []
+    for i in range(len(literals)):
+        non_literals.append(~literals[i])
+    for i in range(len(non_literals)):
+        for j in range(i+1, len(non_literals)):
+            clause = logic.disjoin(non_literals[i], non_literals[j])
+            final_literals.append(clause)
+    return logic.conjoin(final_literals)
 
 
 def exactlyOne(literals) :
@@ -170,8 +175,15 @@ def exactlyOne(literals) :
     CNF (conjunctive normal form)that represents the logic that exactly one of 
     the expressions in the list is true.
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    final_literals = [logic.disjoin(literals)]
+    non_literals = []
+    for i in range(len(literals)):
+        non_literals.append(~literals[i])
+    for i in range(len(non_literals)):
+        for j in range(i+1, len(non_literals)):
+            clause = logic.disjoin(non_literals[i], non_literals[j])
+            final_literals.append(clause)
+    return logic.conjoin(final_literals)
 
 
 def extractActionSequence(model, actions):
@@ -186,9 +198,13 @@ def extractActionSequence(model, actions):
     >>> print plan
     ['West', 'South', 'North']
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
 
+    # print model.keys()
+    # print(model.keys)
+    # print(model.keys())
+    # for i in model.keys():
+    #     print(model[i])
+        # print(model[i].keys())
 
 def pacmanSuccessorStateAxioms(x, y, t, walls_grid):
     """
@@ -231,10 +247,18 @@ def foodLogicPlan(problem):
 plp = positionLogicPlan
 flp = foodLogicPlan
 
-# findModel(sentence3())
-# # findModel(sentence2())
-# # findModel(sentence3())
+import logicPlan
 
+from logic import PropSymbolExpr as PSE
+
+model = {PSE("North",2):True, PSE("P",3,4,1):True,PSE("P",3,3,1):False, PSE("West",0):True,PSE("GhostScary"):True, PSE("West",2):False,PSE("South",1):True, PSE("East",0):False}
+
+actions = ['North', 'South', 'East', 'West']
+
+plan = logicPlan.extractActionSequence(model, actions)
+
+
+print(0)
 
 # Some for the logic module uses pretty deep recursion on long expressions
 sys.setrecursionlimit(100000)
