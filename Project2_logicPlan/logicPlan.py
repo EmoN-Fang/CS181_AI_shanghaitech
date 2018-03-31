@@ -198,13 +198,18 @@ def extractActionSequence(model, actions):
     >>> print plan
     ['West', 'South', 'North']
     """
-
+    action_string = []
     # print model.keys()
-    # print(model.keys)
-    # print(model.keys())
-    # for i in model.keys():
-    #     print(model[i])
-        # print(model[i].keys())
+    # print (len(model))
+    # print model.keys()[0]
+    # print model[0]
+    parse_strings = [logic.PropSymbolExpr.parseExpr(sym_string) for sym_string in model.keys() if model[sym_string] == True]
+    for parse_string in parse_strings:
+        # print(parse_string[0])
+        if parse_string[0] in actions:
+            action_string.append(parse_string)
+    tmp_result = sorted(action_string, key=lambda x: int(x[1]))
+    return [tmp_result[i][0] for i in range(len(tmp_result))]
 
 def pacmanSuccessorStateAxioms(x, y, t, walls_grid):
     """
@@ -212,8 +217,25 @@ def pacmanSuccessorStateAxioms(x, y, t, walls_grid):
     grid representing the wall locations).
     Current <==> (previous position at time t-1) & (took action to move to x, y)
     """
-    "*** YOUR CODE HERE ***"
-    return logic.Expr('A') # Replace this with your expression
+    # print(walls_grid)
+    now_pos = logic.PropSymbolExpr(pacman_str, x, y, t)
+    x_pos = [x-1, x+1]
+    y_pos = [y-1, y+1]
+
+    prev_poses = []
+    for new_x in x_pos:
+        if walls_grid[new_x][y] == False:
+            prev_position = logic.PropSymbolExpr(pacman_str, new_x, y, t-1)
+            prev_action = logic.PropSymbolExpr('East', t-1) if new_x == x-1 else logic.PropSymbolExpr('West', t-1)
+            prev_poses.append(logic.conjoin(prev_position, prev_action))
+
+    for new_y in y_pos:
+        if walls_grid[x][new_y] == False:
+            prev_position = logic.PropSymbolExpr(pacman_str, x, new_y, t-1)
+            prev_action = logic.PropSymbolExpr('North', t-1) if new_y == y-1 else logic.PropSymbolExpr('South', t-1)
+            prev_poses.append(logic.conjoin(prev_position, prev_action))
+    # print(now_pos % logic.disjoin(prev_poses))
+    return(now_pos % logic.disjoin(prev_poses))
 
 
 def positionLogicPlan(problem):
@@ -224,9 +246,51 @@ def positionLogicPlan(problem):
     """
     walls = problem.walls
     width, height = problem.getWidth(), problem.getHeight()
-    
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # print(walls)
+    # print(walls.asList())
+    time_limit = 50
+    start_state = problem.getStartState()
+    (start_x, start_y) = start_state
+    goal_state = problem.getGoalState()
+    (goal_x, goal_y) = goal_state
+    actions = ['East', 'West', 'North', 'South']
+    start_expr = logic.PropSymbolExpr(pacman_str, start_x, start_y, 0)
+    pos_limit = []
+    act_limit = []
+    wall_limit = []
+    for i in range(time_limit):
+        for x1 in range(1, width+1):
+            for y1 in range(1, height+1):
+                for x2 in range (x1, width+1):
+                    for y2 in range(1, height+1):
+                        if x1 != x2 or y1 != y2:
+                            con_pos1 = logic.PropSymbolExpr(pacman_str, x1, y1, i)
+                            con_pos2 = logic.PropSymbolExpr(pacman_str, x2, y2, i)
+                            con_pos_clause = logic.Expr("~", logic.conjoin(con_pos1, con_pos2))
+                            pos_limit.append(con_pos_clause)
+        pos_limit_expr = logic.conjoin(pos_limit)
+        # print(pos_limit_expr)
+        for action1 in actions:
+            for action2 in actions:
+                if action1 != action2:
+                    con_act1 = logic.PropSymbolExpr(action1, i)
+                    con_act2 = logic.PropSymbolExpr(action2, i)
+                    con_act_clause = logic.Expr("~", logic.conjoin(con_act1, con_act2))
+                    act_limit.append(con_act_clause)
+        act_limit_expr = logic.conjoin(act_limit)
+        # print(act_limit_expr)
+        for xx in range(1, width + 1):
+            for yy in range(1, height + 1):
+                if (xx, yy) not in walls.asList():
+                    wall_limit.append(pacmanSuccessorStateAxioms(xx, yy, i + 1, walls))
+        wall_limit_expr = logic.conjoin(wall_limit)
+        # print(wall_limit_expr)
+        goal_expr = logic.PropSymbolExpr(pacman_str, goal_x, goal_y, i)
+        final_clause = logic.conjoin(pos_limit_expr,act_limit_expr,act_limit_expr,wall_limit_expr,goal_expr,start_expr)
+        result = findModel(final_clause)
+        if result is not False:
+            # print (extractActionSequence(result, actions))
+            return extractActionSequence(result, actions)
 
 
 def foodLogicPlan(problem):
@@ -239,27 +303,65 @@ def foodLogicPlan(problem):
     walls = problem.walls
     width, height = problem.getWidth(), problem.getHeight()
 
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    time_limit = 50
+    start_state = problem.getStartState()[0]
+    (start_x, start_y) = start_state
+    food_lists = problem.getStartState()[1].asList()
+    # print(food_lists)
+    actions = ['East', 'West', 'North', 'South']
+    start_expr = logic.PropSymbolExpr(pacman_str, start_x, start_y, 0)
+    pos_limit = []
+    act_limit = []
+    wall_limit = []
+    for i in range(time_limit):
+        for x1 in range(1, width+1):
+            for y1 in range(1, height+1):
+                for x2 in range (x1, width+1):
+                    for y2 in range(1, height+1):
+                        if x1 != x2 or y1 != y2:
+                            con_pos1 = logic.PropSymbolExpr(pacman_str, x1, y1, i)
+                            con_pos2 = logic.PropSymbolExpr(pacman_str, x2, y2, i)
+                            con_pos_clause = logic.Expr("~", logic.conjoin(con_pos1, con_pos2))
+                            pos_limit.append(con_pos_clause)
+        pos_limit_expr = logic.conjoin(pos_limit)
+        # print(pos_limit_expr)
+        for action1 in actions:
+            for action2 in actions:
+                if action1 != action2:
+                    con_act1 = logic.PropSymbolExpr(action1, i)
+                    con_act2 = logic.PropSymbolExpr(action2, i)
+                    con_act_clause = logic.Expr("~", logic.conjoin(con_act1, con_act2))
+                    act_limit.append(con_act_clause)
+        act_limit_expr = logic.conjoin(act_limit)
+        # print(act_limit_expr)
+        for xx in range(1, width + 1):
+            for yy in range(1, height + 1):
+                if (xx, yy) not in walls.asList():
+                    wall_limit.append(pacmanSuccessorStateAxioms(xx, yy, i + 1, walls))
+        wall_limit_expr = logic.conjoin(wall_limit)
+        # print(wall_limit_expr)
+        total_food_limit =[]
+        for food in food_lists:
+            one_food_limit = []
+            for t in range(i+1):
+                one_food_limit.append(logic.PropSymbolExpr("P", food[0], food[1], t))
+            one_food_eat_expr = logic.disjoin(one_food_limit)
+            total_food_limit.append(one_food_eat_expr)
+        food_limit_expr = logic.conjoin(total_food_limit)
+        final_clause = logic.conjoin(pos_limit_expr,act_limit_expr,act_limit_expr,wall_limit_expr,start_expr,food_limit_expr)
+        result = findModel(final_clause)
+        if result is not False:
+            # print (extractActionSequence(result, actions))
+            return extractActionSequence(result, actions)
 
 
 # Abbreviations
 plp = positionLogicPlan
 flp = foodLogicPlan
 
-import logicPlan
-
-from logic import PropSymbolExpr as PSE
-
-model = {PSE("North",2):True, PSE("P",3,4,1):True,PSE("P",3,3,1):False, PSE("West",0):True,PSE("GhostScary"):True, PSE("West",2):False,PSE("South",1):True, PSE("East",0):False}
-
-actions = ['North', 'South', 'East', 'West']
-
-plan = logicPlan.extractActionSequence(model, actions)
-
-
-print(0)
+# print (findModel(sentence1()))
 
 # Some for the logic module uses pretty deep recursion on long expressions
 sys.setrecursionlimit(100000)
-    
+
+
