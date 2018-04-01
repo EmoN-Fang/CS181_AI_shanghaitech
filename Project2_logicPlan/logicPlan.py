@@ -259,16 +259,17 @@ def positionLogicPlan(problem):
     act_limit = []
     wall_limit = []
     for i in range(time_limit):
-        for x1 in range(1, width+1):
-            for y1 in range(1, height+1):
-                for x2 in range (x1, width+1):
-                    for y2 in range(1, height+1):
-                        if x1 != x2 or y1 != y2:
-                            con_pos1 = logic.PropSymbolExpr(pacman_str, x1, y1, i)
-                            con_pos2 = logic.PropSymbolExpr(pacman_str, x2, y2, i)
-                            con_pos_clause = logic.Expr("~", logic.conjoin(con_pos1, con_pos2))
-                            pos_limit.append(con_pos_clause)
-        pos_limit_expr = logic.conjoin(pos_limit)
+        if i == 0:
+            for x1 in range(1, width+1):
+                for y1 in range(1, height+1):
+                    for x2 in range (x1, width+1):
+                        for y2 in range(1, height+1):
+                            if x1 != x2 or y1 != y2:
+                                con_pos1 = logic.PropSymbolExpr(pacman_str, x1, y1, i)
+                                con_pos2 = logic.PropSymbolExpr(pacman_str, x2, y2, i)
+                                con_pos_clause = logic.Expr("~", logic.conjoin(con_pos1, con_pos2))
+                                pos_limit.append(con_pos_clause)
+            pos_limit_expr = logic.conjoin(pos_limit)
         # print(pos_limit_expr)
         for action1 in actions:
             for action2 in actions:
@@ -314,16 +315,17 @@ def foodLogicPlan(problem):
     act_limit = []
     wall_limit = []
     for i in range(time_limit):
-        for x1 in range(1, width+1):
-            for y1 in range(1, height+1):
-                for x2 in range (x1, width+1):
-                    for y2 in range(1, height+1):
-                        if x1 != x2 or y1 != y2:
-                            con_pos1 = logic.PropSymbolExpr(pacman_str, x1, y1, i)
-                            con_pos2 = logic.PropSymbolExpr(pacman_str, x2, y2, i)
-                            con_pos_clause = logic.Expr("~", logic.conjoin(con_pos1, con_pos2))
-                            pos_limit.append(con_pos_clause)
-        pos_limit_expr = logic.conjoin(pos_limit)
+        if i == 0:    
+            for x1 in range(1, width+1):
+                for y1 in range(1, height+1):
+                    for x2 in range (x1, width+1):
+                        for y2 in range(1, height+1):
+                            if x1 != x2 or y1 != y2:
+                                con_pos1 = logic.PropSymbolExpr(pacman_str, x1, y1, i)
+                                con_pos2 = logic.PropSymbolExpr(pacman_str, x2, y2, i)
+                                con_pos_clause = logic.Expr("~", logic.conjoin(con_pos1, con_pos2))
+                                pos_limit.append(con_pos_clause)
+            pos_limit_expr = logic.conjoin(pos_limit)
         # print(pos_limit_expr)
         for action1 in actions:
             for action2 in actions:
